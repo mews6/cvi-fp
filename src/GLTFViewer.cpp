@@ -27,6 +27,9 @@
 
 #include <cmath>
 #include <array>
+#include <iostream>
+#include <fstream>
+#include <string>
 
 #include "GLTFViewer.hpp"
 #include "MapHelper.hpp"
@@ -77,7 +80,7 @@ const std::pair<const char*, const char*> DefaultGLTFModels[] =
 
 const std::pair<const char*, const char*> InformationArchive[] =
 {
-    {"Scanned Foliage",            "models/ScannedFoliage/glTF/005_Foliage_OBJ.glb"}    
+    {"Scanned Foliage",            "models/ScannedFoliage/glTF/info.txt"}    
 };
 
 // clang-format on
@@ -109,6 +112,7 @@ enum GBUFFER_RT_FLAG : Uint32
     GBUFFER_RT_FLAG_DEPTH0            = 1u << GBUFFER_RT_DEPTH0,
     GBUFFER_RT_FLAG_DEPTH1            = 1u << GBUFFER_RT_DEPTH1
 };
+
 DEFINE_FLAG_ENUM_OPERATORS(GBUFFER_RT_FLAG);
 
 GLTFViewer::GLTFViewer() :
@@ -124,6 +128,14 @@ GLTFViewer::GLTFViewer() :
     m_DefaultLight.Type      = GLTF::Light::TYPE::DIRECTIONAL;
     m_DefaultLight.Intensity = 3.f;
 }
+
+void GLTFViewer::LoadInfo(const char* Path)
+{
+    std::ifstream myfile(Path);
+    std::string   fileContent;
+    myfile >> fileContent;
+    infoString = fileContent.c_str();
+};
 
 void GLTFViewer::LoadModel(const char* Path)
 {
@@ -1105,7 +1117,7 @@ void GLTFViewer::UpdateUI()
     {
         ImGui::Text("Selected Model");
         ImGui::Text("++++++++++++++++++++");
-        ImGui::Text("AAAAAAAAAAAAAAAGRIA");
+        ImGui::Text(infoString);
     };
     ImGui::End();
 }
