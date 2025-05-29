@@ -71,6 +71,7 @@
  const std::pair<const char*, const char*> DefaultGLTFModels[] =
      {
          {"Scanned Foliage", "models/005_Foliage_OBJ/model.glb"},
+         {"Leaf", "models/foglia/model.glb"},
      };
  
  const std::pair<const char*, const char*> InformationArchive[] =
@@ -1071,6 +1072,15 @@
          }
      }
      ImGui::End();
+ 
+     if (ImGui::Begin("Additional info: ", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
+     {
+         ImGui::Text("NAME");
+         ImGui::Separator();
+         ImGui::Text("AAAAAGRIA");
+     }
+     ImGui::End();
+       
  }
  
  GLTFViewer::~GLTFViewer()
