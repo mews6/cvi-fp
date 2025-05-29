@@ -1,50 +1,3 @@
-/*
- *  Copyright 2019-2025 Diligent Graphics LLC
- *  Copyright 2015-2019 Egor Yusov
- *
- *  Licensed under the Apache License, Version 2.0 (the "License");
- *  you may not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
- *
- *  In no event and under no legal theory, whether in tort (including negligence),
- *  contract, or otherwise, unless required by applicable law (such as deliberate
- *  and grossly negligent acts) or agreed to in writing, shall any Contributor be
- *  liable for any damages, including any direct, indirect, special, incidental,
- *  or consequential damages of any character arising as a result of this License or
- *  out of the use or inability to use the software (including but not limited to damages
- *  for loss of goodwill, work stoppage, computer failure or malfunction, or any and
- *  all other commercial damages or losses), even if such Contributor has been advised
- *  of the possibility of such damages.
- */
-
-#include <cmath>
-#include <array>
-#include <iostream>
-#include <fstream>
-#include <string>
-
-#include "GLTFViewer.hpp"
-#include "MapHelper.hpp"
-#include "BasicMath.hpp"
-#include "GraphicsUtilities.h"
-#include "TextureUtilities.h"
-#include "CommonlyUsedStates.h"
-#include "ShaderMacroHelper.hpp"
-#include "FileSystem.hpp"
-#include "imgui.h"
-#include "../imGuIZMO.quat/imGuIZMO.h"
-#include "ImGuiUtils.hpp"
-#include "CallbackWrapper.hpp"
-#include "CommandLineParser.hpp"
-#include "GraphicsAccessories.hpp"
 #include "EnvMapRenderer.hpp"
 #include "BoundBoxRenderer.hpp"
 #include "VectorFieldRenderer.hpp"
@@ -75,12 +28,12 @@ SampleBase* CreateSample()
 // clang-format off
 const std::pair<const char*, const char*> DefaultGLTFModels[] =
 {
-    {"Scanned Foliage",            "models/ScannedFoliage/glTF/005_Foliage_OBJ.glb"}
+    {"Scanned Foliage",            "models/005_Foliage_OBJ/model.glb"}
 };
 
 const std::pair<const char*, const char*> InformationArchive[] =
 {
-    {"Scanned Foliage",            "models/ScannedFoliage/glTF/info.txt"}    
+    {"Scanned Foliage",            "models/ScannedFoliage/glTF/model.json"}
 };
 
 // clang-format on
@@ -112,7 +65,6 @@ enum GBUFFER_RT_FLAG : Uint32
     GBUFFER_RT_FLAG_DEPTH0            = 1u << GBUFFER_RT_DEPTH0,
     GBUFFER_RT_FLAG_DEPTH1            = 1u << GBUFFER_RT_DEPTH1
 };
-
 DEFINE_FLAG_ENUM_OPERATORS(GBUFFER_RT_FLAG);
 
 GLTFViewer::GLTFViewer() :
@@ -128,14 +80,6 @@ GLTFViewer::GLTFViewer() :
     m_DefaultLight.Type      = GLTF::Light::TYPE::DIRECTIONAL;
     m_DefaultLight.Intensity = 3.f;
 }
-
-void GLTFViewer::LoadInfo(const char* Path)
-{
-    std::ifstream myfile(Path);
-    std::string   fileContent;
-    myfile >> fileContent;
-    infoString = fileContent.c_str();
-};
 
 void GLTFViewer::LoadModel(const char* Path)
 {
@@ -406,7 +350,7 @@ struct PSOutput
         PSOut.SpecularIBL.xyz  = GetBaseLayerSpecularIBL(Shading, SrfLighting);
 
 #       if ENABLE_CLEAR_COAT
-	    {
+        {
             // We clearly can't do SSR for both base layer and clear coat, so we
             // blend the base layer properties with the clearcoat using the clearcoat factor.
             // This way when the factor is 0.0, we get the base layer, when it is 1.0,
@@ -427,7 +371,7 @@ struct PSOutput
 #       endif
     
         // Blend material data and IBL with background
-	    PSOut.BaseColor    = float4(PSOut.BaseColor.xyz    * BaseColor.a, BaseColor.a);
+        PSOut.BaseColor    = float4(PSOut.BaseColor.xyz    * BaseColor.a, BaseColor.a);
         PSOut.MaterialData = float4(PSOut.MaterialData.xyz * BaseColor.a, BaseColor.a);
         PSOut.SpecularIBL  = float4(PSOut.SpecularIBL.xyz  * BaseColor.a, BaseColor.a);
     
@@ -436,7 +380,7 @@ struct PSOutput
 
         // Also do not blend normal - we want normal of the top layer
         PSOut.Normal.a = 1.0;
-	}
+    }
 #   endif
 
     return PSOut;
@@ -470,7 +414,7 @@ void main(in  float4 Pos          : SV_Position,
     SampleEnvMapOutput EnvMap = SampleEnvMap(ClipPos);
     Color        = EnvMap.Color;
     Normal       = float4(0.0, 0.0, 0.0, 0.0);
-	BaseColor    = float4(0.0, 0.0, 0.0, 0.0);
+    BaseColor    = float4(0.0, 0.0, 0.0, 0.0);
     MaterialData = float4(0.0, 0.0, 0.0, 0.0);
     MotionVec    = float4(EnvMap.MotionVector, 0.0, 1.0);
     SpecularIBL  = float4(0.0, 0.0, 0.0, 0.0);
@@ -622,7 +566,7 @@ void main(in BoundBoxVSOutput VSOut,
     BoundBoxOutput BBOutput = GetBoundBoxOutput(VSOut);
     Color        = BBOutput.Color;
     Normal       = float4(0.0, 0.0, 0.0, 0.0);
-	BaseColor    = float4(0.0, 0.0, 0.0, 0.0);
+    BaseColor    = float4(0.0, 0.0, 0.0, 0.0);
     MaterialData = float4(0.0, 0.0, 0.0, 0.0);
     MotionVec    = float4(BBOutput.MotionVector, 0.0, 1.0);
     SpecularIBL  = float4(0.0, 0.0, 0.0, 0.0);
@@ -1117,7 +1061,7 @@ void GLTFViewer::UpdateUI()
     {
         ImGui::Text("Selected Model");
         ImGui::Text("++++++++++++++++++++");
-        ImGui::Text(infoString);
+        ImGui::Text("AAAAAAAAAAAAAAAGRIA");
     };
     ImGui::End();
 }

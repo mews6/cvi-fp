@@ -69,7 +69,6 @@ protected:
     virtual void UpdateUI() override final;
 
 private:
-    void LoadInfo(const char* Path);
     void LoadModel(const char* Path);
     void LoadEnvironmentMap(const char* Path);
     void UpdateScene();
@@ -147,7 +146,6 @@ private:
     RefCntAutoPtr<IBuffer>               m_FrameAttribsCB;
     RefCntAutoPtr<ITextureView>          m_EnvironmentMapSRV;
     RefCntAutoPtr<ITextureView>          m_WhiteFurnaceEnvMapSRV;
-    const char*                               infoString;
 
     ITextureView* m_pCurrentEnvMapSRV = nullptr;
 
