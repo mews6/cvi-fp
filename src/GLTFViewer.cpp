@@ -68,16 +68,19 @@
  {
      return new GLTFViewer();
  }
+ 
  const std::pair<const char*, const char*> DefaultGLTFModels[] =
      {
          {"Scanned Foliage", "models/005_Foliage_OBJ/model.glb"},
          {"Leaf", "models/foglia/model.glb"},
-     };
+         {"Maple Leaf", "models/maple_leaf/maple_leaf.glb"},
+         {"Cupanopsis Anacardioides", "models/CupanopsisAnacardioides/model.glb"}
+ };
  
  const std::pair<const char*, const char*> InformationArchive[] =
      {
          {"Scanned Foliage", "models/ScannedFoliage/glTF/model.json"}
-     };
+ };
  // clang-format on
  
  enum GBUFFER_RT : Uint32
@@ -362,106 +365,106 @@
      PBR_Renderer::CreateInfo::PSMainSourceInfo PSMainInfo;
  
      PSMainInfo.OutputStruct = R"(
- struct PSOutput
- {
-     float4 Color        : SV_Target0;
-     float4 Normal       : SV_Target1;
-     float4 BaseColor    : SV_Target2;
-     float4 MaterialData : SV_Target3;
-     float4 MotionVec    : SV_Target4;
-     float4 SpecularIBL  : SV_Target5;
- };
- )";
+  struct PSOutput
+  {
+      float4 Color        : SV_Target0;
+      float4 Normal       : SV_Target1;
+      float4 BaseColor    : SV_Target2;
+      float4 MaterialData : SV_Target3;
+      float4 MotionVec    : SV_Target4;
+      float4 SpecularIBL  : SV_Target5;
+  };
+  )";
  
      PSMainInfo.Footer = R"(
-     PSOutput PSOut;
- #   if UNSHADED
-     {
-         PSOut.Color        = g_Frame.Renderer.UnshadedColor + g_Frame.Renderer.HighlightColor;
-         PSOut.Normal       = float4(0.0, 0.0, 0.0, 0.0);
-         PSOut.MaterialData = float4(0.0, 0.0, 0.0, 0.0);
-         PSOut.BaseColor    = float4(0.0, 0.0, 0.0, 0.0);
-         PSOut.SpecularIBL  = float4(0.0, 0.0, 0.0, 0.0);
-     }
- #   else
-     {
-         PSOut.Color            = OutColor;
-         PSOut.Normal.xyz       = Shading.BaseLayer.Normal.xyz;
-         PSOut.MaterialData.xyz = float3(Shading.BaseLayer.Srf.PerceptualRoughness, Shading.BaseLayer.Metallic, 0.0);
-         PSOut.BaseColor.xyz    = BaseColor.xyz;
-         PSOut.SpecularIBL.xyz  = GetBaseLayerSpecularIBL(Shading, SrfLighting);
- 
- #       if ENABLE_CLEAR_COAT
-         {
-             // We clearly can't do SSR for both base layer and clear coat, so we
-             // blend the base layer properties with the clearcoat using the clearcoat factor.
-             // This way when the factor is 0.0, we get the base layer, when it is 1.0,
-             // we get the clear coat, and something in between otherwise.
- 
-             PSOut.Normal.xyz      = normalize(lerp(PSOut.Normal.xyz, Shading.Clearcoat.Normal, Shading.Clearcoat.Factor));
-             PSOut.MaterialData.xy = lerp(PSOut.MaterialData.xy, float2(Shading.Clearcoat.Srf.PerceptualRoughness, 0.0), Shading.Clearcoat.Factor);
-             PSOut.BaseColor.xyz   = lerp(PSOut.BaseColor.xyz, float3(1.0, 1.0, 1.0), Shading.Clearcoat.Factor);
- 
-             // Note that the base layer IBL is weighted by (1.0 - Shading.Clearcoat.Factor * ClearcoatFresnel).
-             // Here we are weighting it by (1.0 - Shading.Clearcoat.Factor), which is always smaller,
-             // so when we subtract the IBL, it can never be negative.
-             PSOut.SpecularIBL.xyz = lerp(
-                 PSOut.SpecularIBL.xyz,
-                 GetClearcoatIBL(Shading, SrfLighting),
-                 Shading.Clearcoat.Factor);
-         }
- #       endif
-     
-         // Blend material data and IBL with background
-         PSOut.BaseColor    = float4(PSOut.BaseColor.xyz    * BaseColor.a, BaseColor.a);
-         PSOut.MaterialData = float4(PSOut.MaterialData.xyz * BaseColor.a, BaseColor.a);
-         PSOut.SpecularIBL  = float4(PSOut.SpecularIBL.xyz  * BaseColor.a, BaseColor.a);
-     
-         // Do not blend motion vectors as it does not make sense
-         PSOut.MotionVec = float4(MotionVector, 0.0, 1.0);
- 
-         // Also do not blend normal - we want normal of the top layer
-         PSOut.Normal.a = 1.0;
-     }
- #   endif
- 
-     return PSOut;
- )";
+      PSOutput PSOut;
+  #   if UNSHADED
+      {
+          PSOut.Color        = g_Frame.Renderer.UnshadedColor + g_Frame.Renderer.HighlightColor;
+          PSOut.Normal       = float4(0.0, 0.0, 0.0, 0.0);
+          PSOut.MaterialData = float4(0.0, 0.0, 0.0, 0.0);
+          PSOut.BaseColor    = float4(0.0, 0.0, 0.0, 0.0);
+          PSOut.SpecularIBL  = float4(0.0, 0.0, 0.0, 0.0);
+      }
+  #   else
+      {
+          PSOut.Color            = OutColor;
+          PSOut.Normal.xyz       = Shading.BaseLayer.Normal.xyz;
+          PSOut.MaterialData.xyz = float3(Shading.BaseLayer.Srf.PerceptualRoughness, Shading.BaseLayer.Metallic, 0.0);
+          PSOut.BaseColor.xyz    = BaseColor.xyz;
+          PSOut.SpecularIBL.xyz  = GetBaseLayerSpecularIBL(Shading, SrfLighting);
+  
+  #       if ENABLE_CLEAR_COAT
+          {
+              // We clearly can't do SSR for both base layer and clear coat, so we
+              // blend the base layer properties with the clearcoat using the clearcoat factor.
+              // This way when the factor is 0.0, we get the base layer, when it is 1.0,
+              // we get the clear coat, and something in between otherwise.
+  
+              PSOut.Normal.xyz      = normalize(lerp(PSOut.Normal.xyz, Shading.Clearcoat.Normal, Shading.Clearcoat.Factor));
+              PSOut.MaterialData.xy = lerp(PSOut.MaterialData.xy, float2(Shading.Clearcoat.Srf.PerceptualRoughness, 0.0), Shading.Clearcoat.Factor);
+              PSOut.BaseColor.xyz   = lerp(PSOut.BaseColor.xyz, float3(1.0, 1.0, 1.0), Shading.Clearcoat.Factor);
+  
+              // Note that the base layer IBL is weighted by (1.0 - Shading.Clearcoat.Factor * ClearcoatFresnel).
+              // Here we are weighting it by (1.0 - Shading.Clearcoat.Factor), which is always smaller,
+              // so when we subtract the IBL, it can never be negative.
+              PSOut.SpecularIBL.xyz = lerp(
+                  PSOut.SpecularIBL.xyz,
+                  GetClearcoatIBL(Shading, SrfLighting),
+                  Shading.Clearcoat.Factor);
+          }
+  #       endif
+      
+          // Blend material data and IBL with background
+          PSOut.BaseColor    = float4(PSOut.BaseColor.xyz    * BaseColor.a, BaseColor.a);
+          PSOut.MaterialData = float4(PSOut.MaterialData.xyz * BaseColor.a, BaseColor.a);
+          PSOut.SpecularIBL  = float4(PSOut.SpecularIBL.xyz  * BaseColor.a, BaseColor.a);
+      
+          // Do not blend motion vectors as it does not make sense
+          PSOut.MotionVec = float4(MotionVector, 0.0, 1.0);
+  
+          // Also do not blend normal - we want normal of the top layer
+          PSOut.Normal.a = 1.0;
+      }
+  #   endif
+  
+      return PSOut;
+  )";
  
      return PSMainInfo;
  }
  
  static constexpr char EnvMapPSMain[] = R"(
- void main(in  float4 Pos          : SV_Position,
-           in  float4 ClipPos      : CLIP_POS,
-           out float4 Color        : SV_Target0,
-           out float4 MotionVec    : SV_Target4)
- {
-     SampleEnvMapOutput EnvMap = SampleEnvMap(ClipPos);
-     Color     = EnvMap.Color;
-     MotionVec = float4(EnvMap.MotionVector, 0.0, 1.0);
- }
- )";
+  void main(in  float4 Pos          : SV_Position,
+            in  float4 ClipPos      : CLIP_POS,
+            out float4 Color        : SV_Target0,
+            out float4 MotionVec    : SV_Target4)
+  {
+      SampleEnvMapOutput EnvMap = SampleEnvMap(ClipPos);
+      Color     = EnvMap.Color;
+      MotionVec = float4(EnvMap.MotionVector, 0.0, 1.0);
+  }
+  )";
  
  static constexpr char EnvMapPSMainGL[] = R"(
- void main(in  float4 Pos          : SV_Position,
-           in  float4 ClipPos      : CLIP_POS,
-           out float4 Color        : SV_Target0,
-           out float4 Normal       : SV_Target1,
-           out float4 BaseColor    : SV_Target2,
-           out float4 MaterialData : SV_Target3,
-           out float4 MotionVec    : SV_Target4,
-           out float4 SpecularIBL  : SV_Target5)
- {
-     SampleEnvMapOutput EnvMap = SampleEnvMap(ClipPos);
-     Color        = EnvMap.Color;
-     Normal       = float4(0.0, 0.0, 0.0, 0.0);
-     BaseColor    = float4(0.0, 0.0, 0.0, 0.0);
-     MaterialData = float4(0.0, 0.0, 0.0, 0.0);
-     MotionVec    = float4(EnvMap.MotionVector, 0.0, 1.0);
-     SpecularIBL  = float4(0.0, 0.0, 0.0, 0.0);
- }
- )";
+  void main(in  float4 Pos          : SV_Position,
+            in  float4 ClipPos      : CLIP_POS,
+            out float4 Color        : SV_Target0,
+            out float4 Normal       : SV_Target1,
+            out float4 BaseColor    : SV_Target2,
+            out float4 MaterialData : SV_Target3,
+            out float4 MotionVec    : SV_Target4,
+            out float4 SpecularIBL  : SV_Target5)
+  {
+      SampleEnvMapOutput EnvMap = SampleEnvMap(ClipPos);
+      Color        = EnvMap.Color;
+      Normal       = float4(0.0, 0.0, 0.0, 0.0);
+      BaseColor    = float4(0.0, 0.0, 0.0, 0.0);
+      MaterialData = float4(0.0, 0.0, 0.0, 0.0);
+      MotionVec    = float4(EnvMap.MotionVector, 0.0, 1.0);
+      SpecularIBL  = float4(0.0, 0.0, 0.0, 0.0);
+  }
+  )";
  
  void GLTFViewer::CreateGLTFRenderer()
  {
@@ -586,15 +589,15 @@
  }
  
  static constexpr char BoundBoxPSMain[] = R"(
- void main(in BoundBoxVSOutput VSOut,
-           out float4 Color        : SV_Target0,
-           out float4 MotionVec    : SV_Target4)
- {
-     BoundBoxOutput BBOutput = GetBoundBoxOutput(VSOut);
-     Color     = BBOutput.Color;
-     MotionVec = float4(BBOutput.MotionVector, 0.0, 1.0);
- }
- )";
+  void main(in BoundBoxVSOutput VSOut,
+            out float4 Color        : SV_Target0,
+            out float4 MotionVec    : SV_Target4)
+  {
+      BoundBoxOutput BBOutput = GetBoundBoxOutput(VSOut);
+      Color     = BBOutput.Color;
+      MotionVec = float4(BBOutput.MotionVector, 0.0, 1.0);
+  }
+  )";
  
  void GLTFViewer::CrateBoundBoxRenderer()
  {
@@ -887,9 +890,9 @@
          if (ImGui::TreeNode("Tone mapping"))
          {
              // clang-format off
-             ImGui::SliderFloat("Average log lum", &m_ShaderAttribs.AverageLogLum, 0.01f, 10.0f);
-             ImGui::SliderFloat("Middle gray",     &m_ShaderAttribs.MiddleGray,    0.01f,  1.0f);
-             ImGui::SliderFloat("White point",     &m_ShaderAttribs.WhitePoint,    0.1f,  20.0f);
+              ImGui::SliderFloat("Average log lum", &m_ShaderAttribs.AverageLogLum, 0.01f, 10.0f);
+              ImGui::SliderFloat("Middle gray",     &m_ShaderAttribs.MiddleGray,    0.01f,  1.0f);
+              ImGui::SliderFloat("White point",     &m_ShaderAttribs.WhitePoint,    0.1f,  20.0f);
              // clang-format on
              ImGui::TreePop();
          }
@@ -1080,7 +1083,6 @@
          ImGui::Text("AAAAAGRIA");
      }
      ImGui::End();
-       
  }
  
  GLTFViewer::~GLTFViewer()
