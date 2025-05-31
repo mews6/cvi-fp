@@ -11,3 +11,5 @@ Some of the scanned models are as follow, since this is a non-commercial endeavo
 "Dry Leaf .::RAWscan::." (https://skfb.ly/6UIWu) by Andrea Spognetta (Spogna) is licensed under Creative Commons Attribution (http://creativecommons.org/licenses/by/4.0/).
 
 "Cupaniopsis Anacardioides Leaf" (https://skfb.ly/6Uoxn) by Opus Poly is licensed under Creative Commons Attribution (http://creativecommons.org/licenses/by/4.0/).
+
+NOTE: these models are marked as NoAI: This model may not be used in datasets for, in the development of, or as inputs to generative AI programs
